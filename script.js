@@ -11,6 +11,14 @@ const statusDisplay = document.getElementById('status-display');
 const editBtn = document.querySelector('[data-testid="test-todo-edit-button"]');
 const deleteBtn = document.querySelector('[data-testid="test-todo-delete-button"]');
 
+// Modal Elements
+const deleteModal = document.getElementById('delete-modal');
+const confirmDeleteBtn = document.getElementById('confirm-delete');
+const cancelDeleteBtn = document.getElementById('cancel-delete');
+
+const editModal = document.getElementById('edit-modal');
+const closeEditBtn = document.getElementById('close-edit');
+
 /**
  * Formats the due date nicely (e.g., "Due Mar 1, 2026")
  * and updates the datetime attribute.
@@ -81,11 +89,39 @@ todoCheckbox.addEventListener('change', (e) => {
     }
 });
 
-// Edit/Delete Actions
+// Modal Logic
 editBtn.addEventListener('click', () => {
-    console.log('edit clicked');
+    editModal.showModal();
+});
+
+closeEditBtn.addEventListener('click', () => {
+    editModal.close();
 });
 
 deleteBtn.addEventListener('click', () => {
-    alert('Delete clicked');
+    deleteModal.showModal();
+});
+
+cancelDeleteBtn.addEventListener('click', () => {
+    deleteModal.close();
+});
+
+confirmDeleteBtn.addEventListener('click', () => {
+    alert('Item deleted');
+    deleteModal.close();
+});
+
+// Close modals when clicking outside
+[editModal, deleteModal].forEach(modal => {
+    modal.addEventListener('click', (e) => {
+        const dialogDimensions = modal.getBoundingClientRect();
+        if (
+            e.clientX < dialogDimensions.left ||
+            e.clientX > dialogDimensions.right ||
+            e.clientY < dialogDimensions.top ||
+            e.clientY > dialogDimensions.bottom
+        ) {
+            modal.close();
+        }
+    });
 });
