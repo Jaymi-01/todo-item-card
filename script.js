@@ -1,127 +1,170 @@
-// Configuration: Due date offset (e.g., 3 days from now)
-const offset = 3 * 24 * 60 * 60 * 1000; // 3 days in milliseconds
-const dueDate = new Date(Date.now() + offset);
+// --- STATE ---
+let state = {
+    title: "Todo Item Card",
+    description: "Ensure the project is finalized before the deadline. Secure the GitHub repository URL and the production Vercel deployment link. attach both to the official submission form, and await the final review.",
+    priority: "High",
+    status: "Pending",
+    dueDate: new Date(Date.now() - 1 * 60 * 60 * 1000), // Defaulting to 1 hour overdue for visibility
+    isEditing: false,
+    isExpanded: false,
+    isOverdue: false
+};
 
-// Elements
-const dueDateEl = document.querySelector('[data-testid="test-todo-due-date"]');
-const timeRemainingEl = document.getElementById('time-remaining');
-const todoCheckbox = document.getElementById('todo-complete');
-const todoCard = document.querySelector('.todo-card');
+// --- ELEMENTS ---
+const todoCardRoot = document.querySelector('.todo-card');
+const todoView = document.getElementById('todo-view');
+const todoEditForm = document.getElementById('todo-edit-form');
+
+// View elements
+const titleEl = document.getElementById('todo-title');
+const descriptionEl = document.getElementById('todo-description');
+const priorityBadge = document.getElementById('priority-badge');
 const statusDisplay = document.getElementById('status-display');
-const editBtn = document.querySelector('[data-testid="test-todo-edit-button"]');
-const deleteBtn = document.querySelector('[data-testid="test-todo-delete-button"]');
+const statusControl = document.getElementById('status-control');
+const todoCompleteToggle = document.getElementById('todo-complete');
+const dueDateDisplay = document.getElementById('due-date-display');
+const timeRemainingEl = document.getElementById('time-remaining');
+const overdueBadge = document.getElementById('overdue-badge');
+const expandToggle = document.getElementById('expand-toggle');
+const collapsibleSection = document.getElementById('collapsible-section');
 
-// Modal Elements
+// Edit elements
+const editTitleInput = document.getElementById('edit-title');
+const editDescriptionInput = document.getElementById('edit-description');
+const editPrioritySelect = document.getElementById('edit-priority');
+const editDueDateInput = document.getElementById('edit-due-date');
+
+// Buttons
+const editBtn = document.getElementById('edit-btn');
+const cancelSaveBtn = document.getElementById('cancel-save');
+const deleteBtn = document.getElementById('delete-btn');
 const deleteModal = document.getElementById('delete-modal');
 const confirmDeleteBtn = document.getElementById('confirm-delete');
 const cancelDeleteBtn = document.getElementById('cancel-delete');
 
-const editModal = document.getElementById('edit-modal');
-const closeEditBtn = document.getElementById('close-edit');
+// --- RENDERING ---
 
-/**
- * Formats the due date nicely (e.g., "Due Mar 1, 2026")
- * and updates the datetime attribute.
- */
-function updateDueDateDisplay() {
-    const options = { month: 'short', day: 'numeric', year: 'numeric' };
-    const formattedDate = dueDate.toLocaleDateString('en-US', options);
-    dueDateEl.textContent = `Due ${formattedDate}`;
-    dueDateEl.setAttribute('datetime', dueDate.toISOString());
-}
-
-/**
- * Calculates and returns a friendly time remaining string
- */
-function updateTimeRemaining() {
-    const now = new Date();
-    const diff = dueDate - now;
-    
-    let text = '';
-    
-    if (diff <= 0) {
-        const hoursOverdue = Math.abs(Math.floor(diff / (1000 * 60 * 60)));
-        if (hoursOverdue >= 1) {
-            text = `Overdue by ${hoursOverdue} hours`;
-        } else {
-            text = 'Overdue!';
-        }
-    } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+function render() {
+    // Mode toggle
+    if (state.isEditing) {
+        todoView.classList.add('hidden');
+        todoEditForm.classList.remove('hidden');
         
-        if (days > 1) {
-            text = `Due in ${days} days`;
-        } else if (days === 1) {
-            text = 'Due tomorrow';
-        } else if (hours >= 1) {
-            text = `Due in ${hours} hours`;
-        } else if (minutes >= 1) {
-            text = `Due in ${minutes} minutes`;
+        editTitleInput.value = state.title;
+        editDescriptionInput.value = state.description;
+        editPrioritySelect.value = state.priority;
+        
+        const localDate = new Date(state.dueDate.getTime() - state.dueDate.getTimezoneOffset() * 60000);
+        editDueDateInput.value = localDate.toISOString().slice(0, 16);
+        editTitleInput.focus();
+    } else {
+        todoView.classList.remove('hidden');
+        todoEditForm.classList.add('hidden');
+    }
+
+    // Basic content
+    titleEl.textContent = state.title;
+    descriptionEl.textContent = state.description;
+    statusDisplay.textContent = state.status;
+    statusControl.value = state.status;
+    todoCompleteToggle.checked = state.status === 'Done';
+
+    // Priority badge & indicator
+    priorityBadge.className = `badge priority-${state.priority.toLowerCase()}`;
+    priorityBadge.innerHTML = `<i class="ph ${state.priority === 'High' ? 'ph-warning-circle' : state.priority === 'Medium' ? 'ph-info' : 'ph-check-circle'}"></i> ${state.priority}`;
+    
+    // Status & Priority Classes for Card
+    const statusClass = `card-status-${state.status.toLowerCase().replace(' ', '-')}`;
+    const priorityClass = `card-priority-${state.priority.toLowerCase()}`;
+    
+    // Time & Overdue calculation
+    const now = new Date();
+    const diff = state.dueDate - now;
+    state.isOverdue = diff < 0 && state.status !== 'Done';
+
+    let timeText = '';
+    if (state.status === 'Done') {
+        timeText = "Completed";
+    } else {
+        const absDiff = Math.abs(diff);
+        const days = Math.floor(absDiff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((absDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((absDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (state.isOverdue) {
+            timeText = `Overdue by ${days > 0 ? days + 'd ' : ''}${hours}h ${minutes}m`;
         } else {
-            text = 'Due now!';
+            timeText = `Due in ${days > 0 ? days + 'd ' : ''}${hours}h ${minutes}m`;
         }
     }
+
+    timeRemainingEl.textContent = timeText;
+    overdueBadge.classList.toggle('hidden', !state.isOverdue);
     
-    timeRemainingEl.textContent = text;
+    // Final Card Classes
+    todoCardRoot.className = `todo-card ${priorityClass} ${statusClass} ${state.isOverdue ? 'card-overdue' : ''}`;
+
+    // Due Date
+    const dateOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    dueDateDisplay.textContent = `Due ${state.dueDate.toLocaleDateString('en-US', dateOptions)}`;
+    dueDateDisplay.setAttribute('datetime', state.dueDate.toISOString());
+
+    // Expand/Collapse
+    const shouldShowExpand = state.description.length > 150;
+    expandToggle.classList.toggle('hidden', !shouldShowExpand);
+    collapsibleSection.classList.toggle('collapsed', !state.isExpanded);
+    expandToggle.textContent = state.isExpanded ? "Show less" : "Show more";
+    expandToggle.setAttribute('aria-expanded', state.isExpanded);
 }
 
-// Initial updates
-updateDueDateDisplay();
-updateTimeRemaining();
+// --- EVENTS ---
 
-// Update every minute
-setInterval(updateTimeRemaining, 60000);
-
-// Toggle Complete
-todoCheckbox.addEventListener('change', (e) => {
-    if (e.target.checked) {
-        todoCard.classList.add('completed');
-        statusDisplay.textContent = 'Done';
-        statusDisplay.classList.remove('status-pending');
-        statusDisplay.classList.add('status-done');
-    } else {
-        todoCard.classList.remove('completed');
-        statusDisplay.textContent = 'Pending';
-        statusDisplay.classList.remove('status-done');
-        statusDisplay.classList.add('status-pending');
-    }
-});
-
-// Modal Logic
 editBtn.addEventListener('click', () => {
-    editModal.showModal();
+    state.isEditing = true;
+    render();
 });
 
-closeEditBtn.addEventListener('click', () => {
-    editModal.close();
+todoEditForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    state.title = editTitleInput.value;
+    state.description = editDescriptionInput.value;
+    state.priority = editPrioritySelect.value;
+    state.dueDate = new Date(editDueDateInput.value);
+    state.isEditing = false;
+    render();
+    editBtn.focus();
 });
 
-deleteBtn.addEventListener('click', () => {
-    deleteModal.showModal();
+cancelSaveBtn.addEventListener('click', () => {
+    state.isEditing = false;
+    render();
+    editBtn.focus();
 });
 
-cancelDeleteBtn.addEventListener('click', () => {
-    deleteModal.close();
+statusControl.addEventListener('change', (e) => {
+    state.status = e.target.value;
+    render();
 });
 
+todoCompleteToggle.addEventListener('change', (e) => {
+    state.status = e.target.checked ? 'Done' : 'Pending';
+    render();
+});
+
+expandToggle.addEventListener('click', () => {
+    state.isExpanded = !state.isExpanded;
+    render();
+});
+
+deleteBtn.addEventListener('click', () => deleteModal.showModal());
+cancelDeleteBtn.addEventListener('click', () => deleteModal.close());
 confirmDeleteBtn.addEventListener('click', () => {
     alert('Item deleted');
     deleteModal.close();
 });
 
-// Close modals when clicking outside
-[editModal, deleteModal].forEach(modal => {
-    modal.addEventListener('click', (e) => {
-        const dialogDimensions = modal.getBoundingClientRect();
-        if (
-            e.clientX < dialogDimensions.left ||
-            e.clientX > dialogDimensions.right ||
-            e.clientY < dialogDimensions.top ||
-            e.clientY > dialogDimensions.bottom
-        ) {
-            modal.close();
-        }
-    });
-});
+// Periodic update (30 seconds)
+setInterval(render, 30000);
+
+// Initial render
+render();
