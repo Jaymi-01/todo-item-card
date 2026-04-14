@@ -11,57 +11,109 @@
     <div class="page-container">
         <h1 class="page-title">Todo Item Card</h1>
         <article class="todo-card" data-testid="test-todo-card">
-            <header class="card-header">
-                <div class="header-top">
-                    <div class="priority-container">
-                        <span class="badge priority-high" data-testid="test-todo-priority" aria-label="Priority: High">
-                            <i class="ph ph-warning-circle" aria-hidden="true"></i> High
-                        </span>
-                        <span class="badge status-pending" data-testid="test-todo-status" id="status-display">Pending</span>
-                    </div>
-                    <div class="action-buttons">
-                        <button class="icon-button" data-testid="test-todo-edit-button" aria-label="Edit Task">
-                            <i class="ph ph-pencil-simple" aria-hidden="true"></i>
-                        </button>
-                        <button class="icon-button delete-button" data-testid="test-todo-delete-button" aria-label="Delete Task">
-                            <i class="ph ph-trash" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="title-section">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="todo-complete" class="todo-checkbox" data-testid="test-todo-complete-toggle">
-                        <label for="todo-complete" class="sr-only">Mark as complete</label>
-                    </div>
-                    <h2 class="todo-title" data-testid="test-todo-title">Complete HNG Task Zero</h2>
-                </div>
-            </header>
+            <!-- Priority indicator -->
+            <div class="priority-indicator" data-testid="test-todo-priority-indicator"></div>
 
-            <main class="card-content">
-                <p class="todo-description" data-testid="test-todo-description">
-                    Ensure the project is finalized before the deadline. Secure the GitHub repository URL and the production Vercel deployment link. attach both to the official submission form, and await the final review.
-                </p>
-                <div class="tags-section">
-                    <ul class="tag-list" data-testid="test-todo-tags" role="list">
-                        <li class="tag" data-testid="test-todo-tag-work">Work</li>
-                        <li class="tag" data-testid="test-todo-tag-urgent">Urgent</li>
-                        <li class="tag">Design</li>
-                    </ul>
-                </div>
-            </main>
+            <div id="todo-view">
+                <header class="card-header">
+                    <div class="header-top">
+                        <div class="status-priority-group">
+                            <span class="badge priority-high" data-testid="test-todo-priority" id="priority-badge">
+                                <i class="ph ph-warning-circle" aria-hidden="true"></i> High
+                            </span>
+                            
+                            <div class="status-wrapper">
+                                <label for="status-control" class="sr-only">Status</label>
+                                <select id="status-control" class="status-select" data-testid="test-todo-status-control">
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                                <span class="status-badge" id="status-display" data-testid="test-todo-status">Pending</span>
+                            </div>
 
-            <footer class="card-footer">
-                <div class="date-info">
-                    <div class="date-item">
-                        <i class="ph ph-calendar-blank" aria-hidden="true"></i>
-                        <time datetime="2026-03-01T18:00" data-testid="test-todo-due-date">Due Mar 1, 2026</time>
+                            <span id="overdue-badge" class="overdue-tag hidden" data-testid="test-todo-overdue-indicator">Overdue</span>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="icon-button" id="edit-btn" data-testid="test-todo-edit-button" aria-label="Edit Task">
+                                <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+                            </button>
+                            <button class="icon-button delete-button" id="delete-btn" data-testid="test-todo-delete-button" aria-label="Delete Task">
+                                <i class="ph ph-trash" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="date-item remaining">
-                        <i class="ph ph-clock" aria-hidden="true"></i>
-                        <time data-testid="test-todo-time-remaining" id="time-remaining" aria-live="polite">Loading...</time>
+                    <div class="title-section">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="todo-complete" class="todo-checkbox" data-testid="test-todo-complete-toggle">
+                            <label for="todo-complete" class="sr-only">Mark as complete</label>
+                        </div>
+                        <h2 class="todo-title" id="todo-title" data-testid="test-todo-title">Todo Item Card</h2>
+                    </div>
+                </header>
+
+                <main class="card-content">
+                    <div id="collapsible-section" class="collapsible-container" data-testid="test-todo-collapsible-section">
+                        <p class="todo-description" id="todo-description" data-testid="test-todo-description">
+                            Ensure the project is finalized before the deadline. Secure the GitHub repository URL and the production Vercel deployment link. attach both to the official submission form, and await the final review.
+                        </p>
+                    </div>
+                    <button id="expand-toggle" class="expand-toggle hidden" data-testid="test-todo-expand-toggle" aria-expanded="false" aria-controls="collapsible-section">
+                        Show more
+                    </button>
+
+                    <div class="tags-section">
+                        <ul class="tag-list" data-testid="test-todo-tags" role="list">
+                            <li class="tag" data-testid="test-todo-tag-work">Work</li>
+                            <li class="tag" data-testid="test-todo-tag-urgent">Urgent</li>
+                            <li class="tag">Design</li>
+                        </ul>
+                    </div>
+                </main>
+
+                <footer class="card-footer">
+                    <div class="date-info">
+                        <div class="date-item">
+                            <i class="ph ph-calendar-blank" aria-hidden="true"></i>
+                            <time id="due-date-display" data-testid="test-todo-due-date"></time>
+                        </div>
+                        <div class="date-item remaining">
+                            <i class="ph ph-clock" aria-hidden="true"></i>
+                            <time id="time-remaining" data-testid="test-todo-time-remaining" aria-live="polite">Loading...</time>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+
+            <!-- Edit Form Mode -->
+            <form id="todo-edit-form" class="edit-form hidden" data-testid="test-todo-edit-form">
+                <div class="form-group">
+                    <label for="edit-title" class="form-label">Task Title</label>
+                    <input type="text" id="edit-title" class="form-input" data-testid="test-todo-edit-title-input">
+                </div>
+                <div class="form-group">
+                    <label for="edit-description" class="form-label">Description</label>
+                    <textarea id="edit-description" class="form-textarea" data-testid="test-todo-edit-description-input" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit-priority" class="form-label">Priority</label>
+                        <select id="edit-priority" class="form-select" data-testid="test-todo-edit-priority-select">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-due-date" class="form-label">Due Date</label>
+                        <input type="datetime-local" id="edit-due-date" class="form-input" data-testid="test-todo-edit-due-date-input">
                     </div>
                 </div>
-            </footer>
+                <div class="form-actions">
+                    <button type="button" id="cancel-save" class="btn btn-secondary" data-testid="test-todo-cancel-button">Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-testid="test-todo-save-button">Save</button>
+                </div>
+            </form>
         </article>
     </div>
 
@@ -73,21 +125,6 @@
             <div class="modal-actions">
                 <button id="cancel-delete" class="btn btn-secondary">Cancel</button>
                 <button id="confirm-delete" class="btn btn-danger">Yes, Delete</button>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Edit Restricted Modal -->
-    <dialog id="edit-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="modal-title">Edit Task</h2>
-            <div class="edit-field">
-                <label for="edit-title-input" class="edit-label">Task Title</label>
-                <input type="text" id="edit-title-input" class="edit-input" value="Complete HNG Task Zero" disabled>
-            </div>
-            <p class="modal-description restricted-text">Editing is currently restricted for this task.</p>
-            <div class="modal-actions">
-                <button id="close-edit" class="btn btn-secondary">Close</button>
             </div>
         </div>
     </dialog>
